@@ -1,4 +1,3 @@
-
 import os
 import streamlit as st
 from datetime import datetime, timedelta
@@ -33,7 +32,9 @@ def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, con
 |9990|14|
 |9999|20|"""
 
-    pasta_raiz = f"arquivos_{ano}"
+    # Define o caminho da pasta Downloads do usuário
+    pasta_downloads = os.path.expanduser("~/Downloads")
+    pasta_raiz = os.path.join(pasta_downloads, f"arquivos_{ano}")
     os.makedirs(pasta_raiz, exist_ok=True)
 
     for mes in range(1, 13):
@@ -73,7 +74,7 @@ def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, con
     return os.path.abspath(pasta_raiz)
 
 # Interface Streamlit
-st.title("Gerador de Arquivos por Ano")
+st.title("Gerador de Arquivos SPED por Ano")
 
 # Campos de entrada para o usuário (sem valores padrão)
 ano = st.number_input("Informe o ano", min_value=2000, max_value=2100, step=1)
