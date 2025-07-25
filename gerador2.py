@@ -6,7 +6,7 @@ def ultimo_dia_do_mes(data):
     proximo_mes = data.replace(day=28) + timedelta(days=4)
     return (proximo_mes - timedelta(days=proximo_mes.day)).day
 
-def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, contato_nome, telefone, email):
+def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, contato_nome, telefone, email, pasta_destino):
     estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
                'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
                'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
@@ -32,10 +32,16 @@ def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, con
 |9990|14|
 |9999|20|"""
 
-    # Define o caminho da pasta Downloads do usuário
-    pasta_downloads = os.path.expanduser("~/Downloads")
-    pasta_raiz = os.path.join(pasta_downloads, f"arquivos_{ano}")
-    os.makedirs(pasta_raiz, exist_ok=True)
+    # Se o campo pasta_destino estiver vazio, usa a pasta Downloads como padrão
+    if not pasta_destino:
+        pasta_destino = os.path.expanduser("~/Downloads")
+    
+    # Verifica se o diretório existe e é válido, caso contrário, cria
+    try:
+        pasta_raiz = os.path.join(pasta_destino, f"arquivos_{ano}")
+        os.makedirs(pasta_raiz, exist_ok=True)
+    except Exception as e:
+        return None, f"Erro ao criar a pasta: {str(e)}"
 
     for mes in range(1, 13):
         pasta_mes = os.path.join(pasta_raiz, f"{mes:02d}")
@@ -71,7 +77,7 @@ def gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, con
                 f.write(conteudo)
 
     # Retorna o caminho absoluto da pasta raiz
-    return os.path.abspath(pasta_raiz)
+    return os.path.abspath(pasta_raiz), None
 
 # Interface Streamlit
 st.title("Gerador de Arquivos SPED por Ano")
@@ -89,11 +95,15 @@ uf = st.selectbox("UF", ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
 contato_nome = st.text_input("Nome do Contato")
 telefone = st.text_input("Telefone")
 email = st.text_input("E-mail")
+pasta_destino = st.text_input("Caminho para salvar os arquivos (deixe em branco para usar a pasta Downloads)")
 
 if st.button("Gerar Arquivos"):
     if cnpj and razao_social and endereco and cep and cod_mun and uf and contato_nome and telefone and email:
-        caminho_pasta = gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, contato_nome, telefone, email)
-        st.success(f"Arquivos para {ano} gerados com sucesso!")
-        st.info(f"Os arquivos foram salvos em: {caminho_pasta}")
+        caminho_pasta, erro = gerar_arquivos_sped(ano, cnpj, razao_social, endereco, cep, cod_mun, uf, contato_nome, telefone, email, pasta_destino)
+        if erro:
+            st.error(erro)
+        else:
+            st.success(f"Arquivos para {ano} gerados com sucesso!")
+            st.info(f"Os arquivos foram salvos em: {caminho_pasta}")
     else:
-        st.error("Por favor, preencha todos os campos antes de gerar os arquivos.")
+        st.error("Por favor, preencha todos os campos obrigatórios antes de gerar os arquivos.")
